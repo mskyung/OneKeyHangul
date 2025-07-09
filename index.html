@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneHangul</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>One Key Hangul</h1> <textarea id="kkotipInput" rows="10" placeholder="여기에 한글이 입력됩니다."></textarea>
+    
+    <div id="debugOutput">현재 상태: 대기중</div> 
+
+    <div id="controlPanel">
+        <div class="hand-selection">
+            <input type="radio" id="leftHand" name="handOption" value="left">
+            <label for="leftHand">Left</label>            
+			<input type="radio" id="rightHand" name="handOption" value="right" checked>
+            <label for="rightHand">Right</label>
+        </div>
+	    <button id="refreshButton">Refresh</button>
+        <button id="deleteButton">←</button> 
+    </div>
+    
+    <div id="inputButtons">
+        <button id="mainInputButton" class="input-button">
+            <div class="lines">
+                 <span class="line-22-5"></span>
+                 <span class="line-67-5"></span>
+                 <span class="line-112-5"></span>
+                 <span class="line-157-5"></span>
+            </div>
+            <div class="center-circle"></div> 
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
