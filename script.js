@@ -160,14 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'consonant': { 
             // 각 방향은 이제 '버튼 구역'을 의미하며, dragChar는 해당 구역에서 드래그 시 나오는 자음.
             // (예: 'right'는 'ㅇ' 버튼 구역, 여기서 드래그하면 'ㅇ'이 나옴)
-            'right': { angle: [337.5, 22.5], char: 'ㅇ', doubleTapChar: 'ㅁ', dragChar: 'ㅎ' }, 
+            'right': { angle: [337.5, 22.5], char: 'ㅇ', doubleTapChar: 'ㅎ', dragChar: 'ㅎ' }, 
             'up-right': { angle: [292.5, 337.5], char: 'ㄱ', doubleTapChar: 'ㄲ', dragChar: 'ㅋ' },
-            'up': { angle: [247.5, 292.5], char: 'ㅅ', doubleTapChar: 'ㅆ', dragChar: '' },
+            'up': { angle: [247.5, 292.5], char: 'ㅅ', doubleTapChar: 'ㅆ', dragChar: 'ㅊ' },
             'up-left': { angle: [202.5, 247.5], char: 'ㅈ', doubleTapChar: 'ㅉ', dragChar: 'ㅊ' }, 
             'left': { angle: [157.5, 202.5], char: 'ㄷ', doubleTapChar: 'ㄸ', dragChar: 'ㅌ' },
-            'down-left': { angle: [112.5, 157.5], char: 'ㄴ', doubleTapChar: '', dragChar: 'ㄹ' }, 
+            'down-left': { angle: [112.5, 157.5], char: 'ㄴ', doubleTapChar: 'ㄹ', dragChar: 'ㄹ' }, 
             'down': { angle: [67.5, 112.5], char: 'ㅂ', doubleTapChar: 'ㅃ', dragChar: 'ㅍ' },
-            'down-right': { angle: [22.5, 67.5], char: '', doubleTapChar: '', dragChar: '' } 
+            'down-right': { angle: [22.5, 67.5], char: 'ㅁ', doubleTapChar: 'ㅍ', dragChar: 'ㅍ' } 
         },
         'vowel': { 
             'right': { angle: [337.5, 22.5], char: 'ㅏ' },
