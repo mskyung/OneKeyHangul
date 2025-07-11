@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentJung = -1;
     let currentJong = -1;
     let inputTimeoutId = null;
-    const INPUT_TIMEOUT_MS = 700; 
+    const INPUT_TIMEOUT_MS = 10000; 
 
     const HANGUL_BASE_CODE = 0xAC00;
     const CHOSUNG_COUNT = 19;
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const TAP_DURATION_THRESHOLD = 250;
-    const DOUBLE_TAP_DISTANCE_THRESHOLD = 5; // 더블 탭 간격
+    const DOUBLE_TAP_DISTANCE_THRESHOLD = 15; // 더블 탭 간격
     const DRAG_DISTANCE_THRESHOLD = 8; // 드래그 시작으로 인식할 최소 거리
     const TWO_FINGER_DRAG_THRESHOLD = 15; 
 
@@ -160,14 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'consonant': { 
             // 각 방향은 이제 '버튼 구역'을 의미하며, dragChar는 해당 구역에서 드래그 시 나오는 자음.
             // (예: 'right'는 'ㅇ' 버튼 구역, 여기서 드래그하면 'ㅇ'이 나옴)
-            'right': { angle: [337.5, 22.5], char: 'ㅇ', doubleTapChar: 'ㅎ', dragChar: 'ㅎ' }, 
+            'right': { angle: [337.5, 22.5], char: 'ㅇ', doubleTapChar: '@', dragChar: 'ㅎ' }, 
             'up-right': { angle: [292.5, 337.5], char: 'ㄱ', doubleTapChar: 'ㄲ', dragChar: 'ㅋ' },
             'up': { angle: [247.5, 292.5], char: 'ㅅ', doubleTapChar: 'ㅆ', dragChar: 'ㅊ' },
-            'up-left': { angle: [202.5, 247.5], char: 'ㅈ', doubleTapChar: 'ㅉ', dragChar: 'ㅊ' }, 
+            'up-left': { angle: [202.5, 247.5], char: 'ㅈ', doubleTapChar: 'ㅉ', dragChar: 'ㅉ' }, 
             'left': { angle: [157.5, 202.5], char: 'ㄷ', doubleTapChar: 'ㄸ', dragChar: 'ㅌ' },
-            'down-left': { angle: [112.5, 157.5], char: 'ㄴ', doubleTapChar: 'ㄹ', dragChar: 'ㄹ' }, 
+            'down-left': { angle: [112.5, 157.5], char: 'ㄴ', doubleTapChar: ',', dragChar: 'ㄹ' }, 
             'down': { angle: [67.5, 112.5], char: 'ㅂ', doubleTapChar: 'ㅃ', dragChar: 'ㅍ' },
-            'down-right': { angle: [22.5, 67.5], char: 'ㅁ', doubleTapChar: 'ㅍ', dragChar: 'ㅍ' } 
+            'down-right': { angle: [22.5, 67.5], char: 'ㅁ', doubleTapChar: '?', dragChar: '.' } 
         },
         'vowel': { 
             'right': { angle: [337.5, 22.5], char: 'ㅏ' },
@@ -210,12 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'multi_complex_vowel_transitions': { 
             'up_right_down': 'ㅙ', 
-			'up_right_down-left': 'ㅙ', 
             'up_down-right_down-left': 'ㅙ', 
 
             'down_left_up': 'ㅞ',  
-			'down_left_up-right': 'ㅞ',
-            'down_up-left_up-right': 'ㅞ'
+            'down_up-left_up-right': 'ㅞ'  
         }
     };
 
@@ -390,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
 
-        let tempCharToUpdate = ''; // 최종적으로 텍스트 에어리어에 반영될 글자
+        let tempCharToUpdate = ''; // 이 변수에 최종적으로 텍스트 에어리어에 반영될 문자열을 담음.
         let lastChar = currentText.slice(-1);
         let lastCharDisassembled = disassembleHangul(lastChar);
         
@@ -422,10 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (shouldCommitPrevious && currentCombined) {
-                // 이전 글자를 확정하여 업데이트.
-                // combineHangul()의 결과가 1글자일 수도, 겹받침 등으로 2글자일 수도 있으므로, 길이를 정확히 파악해야 함.
-                const prevCharLen = currentCombined.length; // 확정될 글자의 길이
-                kkotipInput.value = currentText.slice(0, cursorPosition - prevCharLen) + currentCombined;
+                kkotipInput.value = currentText.slice(0, cursorPosition - currentCombined.length) + currentCombined;
                 cursorPosition = kkotipInput.value.length;
                 resetCombination();
             }
@@ -451,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (newComplexJong) { // 겹받침이 가능한 경우 (예: ㄳ)
                         currentJong = getCharIndex(newComplexJong, 'jong');
                         tempCharToUpdate = combineHangul(); // 현재 글자 재조합 (겹받침 포함)
-                        kkotipInput.value = kkotipInput.value.slice(0, cursorPosition - 1) + tempCharToUpdate; // 현재 글자 대체 (길이 1만 지움, 어차피 겹받침은 1글자)
+                        kkotipInput.value = kkotipInput.value.slice(0, cursorPosition - 1) + tempCharToUpdate; // 현재 글자 대체
                     } else { 
                         // 겹받침 불가능 -> 현재 글자 확정하고, 새 자음은 다음 글자의 초성으로
                         // (이전 글자 확정은 위에서 이미 처리되었으므로 여기서는 새로운 글자 시작만)
@@ -768,6 +763,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // ⭐ 자음 모드 꺾임 감지 로직 완전히 제거 (오빠의 지시 반영) ⭐
         // 이 블록은 통째로 삭제되어 handleMove 에는 포함되지 않습니다.
+        /*
+        else if (isConsonantModeActive && isDragging) {
+            // 이 블록의 모든 내용이 제거됩니다.
+        }
+        */ 
+        // 자음 꺾임 감지 로직 제거 끝 (확실히 제거됨)
 
         prevX = currentX;
         prevY = currentY;
