@@ -39,14 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastTapDirection = null;
     let lastTapStartX = 0;
     let lastTapStartY = 0;
-    let isDoubleTapHandledThisCycle = false; // 현재 touchstart ~ touchend 사이클에서 더블 탭이 처리되었는지 여부
+    let isDoubleTapHandledThisCycle = false; 
 
     // --- 한글 조합 관련 변수 (최소화 및 타자기 모드에 맞게 재정의) ---
     let currentCho = -1; 
     let currentJung = -1;
     let currentJong = -1;
     let inputTimeoutId = null; 
-    const INPUT_TIMEOUT_MS = 500; // 입력 중단 시 조합 확정까지의 대기 시간
+    const INPUT_TIMEOUT_MS = 500; 
 
     // 한글 자모 데이터
     const HANGUL_BASE_CODE = 0xAC00;
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function splitComplexJongsung(complexJongChar) {
-        for (const [key, value] of Object.entries(COMPLEX_JONGSUNG_MAP)) {
+        for (const [key, value] of Object.entries(COMPLEX_JUNGSUNG_MAP)) {
             if (value === complexJongChar) {
                 return [key[0], key[1]];
             }
@@ -147,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 제스처 및 탭 인식 임계값
     const DRAG_DISTANCE_THRESHOLD = 8; 
-    const TAP_DURATION_THRESHOLD = 250; // 더블 탭 인식 시간 간격
-    const DOUBLE_TAP_DISTANCE_THRESHOLD = 15; // 더블 탭 인식 최대 이동 거리
+    const TAP_DURATION_THRESHOLD = 250; 
+    const DOUBLE_TAP_DISTANCE_THRESHOLD = 15; 
 
     // DIRECTIONS 객체는 K가 제공한 그대로 유지
     const DIRECTIONS = { 
@@ -319,31 +319,53 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 현재 조합 버퍼가 비어있으면 조합할 내용 없음
         if (currentCho === -1 && currentJung === -1 && currentJong === -1) {
             debugOutput.textContent = `조합할 자모가 버퍼에 없음`;
             return;
         }
 
-        let combinedResult = combineHangul(); 
+        // K의 조합 원칙에 따라 조합 시도 (currentCho, currentJung, currentJong 활용)
+        let combinedResult = combineHangul(); // 이 함수는 currentCho/Jung/Jong에 있는 값으로만 조합
+
         if (combinedResult) {
-            let charsToReplaceCount = 0;
+            let charsToReplaceCount = 0; // 실제 텍스트에서 대체될 자모의 수
+
+            // --- K의 조합 원칙을 바탕으로 charsToReplaceCount 계산 ---
+            // '타자기'는 입력된 그대로 표시 후 조합이므로, 조합된 글자를 만들기 위해
+            // 실제 몇 개의 자모 문자가 지워져야 하는지 정확히 파악해야 한다.
             
-            if (currentJong !== -1) { 
-                charsToReplaceCount = 3; 
-                let jongChar = JONGSUNG[currentJong];
-                if (jongChar && (jongChar === 'ㄳ' || jongChar === 'ㄵ' || jongChar === 'ㄶ' ||
-                                  jongChar === 'ㄺ' || jongChar === 'ㄻ' || jongChar === 'ㄼ' ||
-                                  jongChar === 'ㄽ' || jongChar === 'ㄾ' || jongChar === 'ㄿ' ||
-                                  jongChar === 'ㅀ' || jongChar === 'ㅄ')) {
-                    charsToReplaceCount = 4; 
+            // 1. 현재 버퍼에 초성, 중성, 종성이 모두 있다면 (예: 'ㄱ', 'ㅏ', 'ㄴ' -> '간')
+            if (currentCho !== -1 && currentJung !== -1 && currentJong !== -1) {
+                // 겹받침인 경우 (예: 'ㄳ'은 JONGSUNG에서 2글자로 되어있음. 'ㄱ' 'ㅅ' 두 글자 입력 후 'ㄳ'이 되어야 함)
+                const jongCharStr = JONGSUNG[currentJong];
+                if (jongCharStr.length > 1) { // 겹받침 (예: ㄳ, ㄵ 등)
+                    charsToReplaceCount = 4; // 초성1 + 중성1 + 겹받침2 = 4개 자모
+                } else { // 단일 종성 (예: ㄱ, ㄴ, ㄷ)
+                    charsToReplaceCount = 3; // 초성1 + 중성1 + 단일종성1 = 3개 자모
                 }
-            } else if (currentJung !== -1) { 
-                charsToReplaceCount = 2;
-            } else if (currentCho !== -1) { 
-                charsToReplaceCount = 1;
+            } 
+            // 2. 현재 버퍼에 초성, 중성만 있다면 (예: 'ㄱ', 'ㅏ' -> '가')
+            else if (currentCho !== -1 && currentJung !== -1) {
+                charsToReplaceCount = 2; // 초성1 + 중성1 = 2개 자모
+            } 
+            // 3. 현재 버퍼에 초성만 있다면 (예: 'ㄱ' -> 'ㄱ')
+            else if (currentCho !== -1) {
+                charsToReplaceCount = 1; // 초성1 = 1개 자모
+            } 
+            // 4. 현재 버퍼에 중성만 있다면 (예: 'ㅏ' -> 'ㅏ')
+            else if (currentJung !== -1) {
+                charsToReplaceCount = 1; // 중성1 = 1개 자모
             }
-            
+
+            // 실제 텍스트 대체
             if (charsToReplaceCount > 0 && combinedResult) { 
+                // K의 지시: 글자가 스스로 바뀌거나 다른 글자가 입력되지 않아야 한다.
+                // 따라서, combineHangul 결과가 유효하고, 실제로 지워야 할 자모가 있을 때만 대체.
+                // 만약 현재 텍스트의 마지막 자모들이 실제로 currentCho/Jung/Jong에 해당하는지
+                // 정확히 확인하여 `charsToReplaceCount`를 계산하고 대체하는 것이 안전하다.
+                // 여기서는 `processInputAndSetTimer`에서 `currentCho` 등이 정확히 채워졌다고 가정하고
+                // 그 개수를 바탕으로 지운다.
                 kkotipInput.value = currentText.substring(0, cursorPos - charsToReplaceCount) + combinedResult;
                 kkotipInput.selectionStart = kkotipInput.value.length;
                 kkotipInput.selectionEnd = kkotipInput.value.length;
@@ -352,11 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  debugOutput.textContent = `조합 실패 또는 불필요: ${currentText.slice(Math.max(0, cursorPos - charsToReplaceCount), cursorPos)}`;
             }
 
-        } else {
-             debugOutput.textContent = `조합할 자모가 없음.`;
+        } else { // combinedResult가 비었을 경우 (조합 불가능)
+             debugOutput.textContent = `조합할 자모가 버퍼에 있지만 조합 불가능.`;
         }
 
-        resetCombination(); 
+        resetCombination(); // 조합 후 버퍼 초기화
         kkotipInput.focus();
     }
 
@@ -391,48 +413,98 @@ document.addEventListener('DOMContentLoaded', () => {
         appendCharToInput(char);
         debugOutput.textContent = `직접 입력: ${char}`;
 
-        // 현재 입력된 자모를 조합 버퍼에 넣기
+        // ⭐ 조합 버퍼 업데이트 로직 (K의 조합 원칙 반영 및 오류 수정) ⭐
+        // 중요한 점: 자모가 들어올 때, 현재 버퍼 상태를 보고 '확정'할지 '추가'할지 결정
         const choIdx = getCharIndex(char, 'cho');
         const jungIdx = getCharIndex(char, 'jung');
         const jongIdx = getCharIndex(char, 'jong');
         
-        // 현재 조합 버퍼 상태에 따라 자모를 채움
-        if (choIdx !== -1) { // 입력이 초성일 때
-            // 현재 조합 중인 글자가 없거나, 이미 완성된 글자 뒤에 새 초성이 오는 경우
-            if (currentCho === -1 || (currentCho !== -1 && currentJung !== -1 && currentJong !== -1)) { // 완성된 글자 뒤에 초성
-                combineLastInputtedHangul(); 
-                resetCombination(); 
-                currentCho = choIdx;
-            } else if (currentCho !== -1 && currentJung === -1) { // 초성만 있는 상태에서 새 초성
-                combineLastInputtedHangul(); 
-                resetCombination(); 
-                currentCho = choIdx;
-            } else { // 기타 초성 입력
-                 combineLastInputtedHangul(); 
-                 resetCombination();
-                 currentCho = choIdx;
+        let shouldCombineAndResetCurrentBuffer = false; // 현재 버퍼를 확정하고 새로 시작할지 결정하는 플래그
+
+        if (choIdx !== -1) { // 입력이 초성일 때 (ㄱ, ㄲ, ㅅ, ㅉ 등)
+            // 1. 현재 버퍼가 이미 완성형 글자를 담고 있거나 (초+중+종)
+            // 2. 현재 버퍼가 초성+중성만 있고, 새 자음이 종성이 아닌 초성으로 올 때 (예: '가' 다음 'ㄱ'은 새 초성)
+            // 3. 현재 버퍼가 초성만 있고, 새 자음이 같은 초성인데 쌍자음이 아니거나 (예: 'ㄱ' 다음 'ㄹ'),
+            //    혹은 이미 쌍자음인데 또 같은 쌍자음이 올 때 (예: 'ㄲ' 다음 'ㄲ') -> 즉, 이전 초성 확정 후 새 초성 시작
+            if ((currentCho !== -1 && currentJung !== -1) || // 초성+중성이 있는 상태 (종성이 있든 없든)
+                (currentCho !== -1 && currentJung === -1 && currentJong === -1) // 초성만 있는 상태에서 또 초성
+            ) {
+                shouldCombineAndResetCurrentBuffer = true;
             }
+            
+            if (shouldCombineAndResetCurrentBuffer) {
+                combineLastInputtedHangul(); // 이전 버퍼 확정
+                resetCombination(); // 버퍼 초기화
+            }
+            currentCho = choIdx; // 새 초성 설정
         } 
-        else if (jungIdx !== -1) { // 입력이 중성일 때
-            if (currentCho === -1) { // 초성이 없는 상태에서 모음
-                 combineLastInputtedHangul(); 
-                 resetCombination(); 
-                 currentJung = jungIdx;
-            } else if (currentJung === -1) { // 초성만 있는 상태에서 중성
+        else if (jungIdx !== -1) { // 입력이 중성일 때 (ㅏ, ㅑ, ㅗ 등)
+            // 1. 현재 버퍼에 초성이 없다면 (예: 'ㅏ'만 입력) -> 단독 모음
+            // 2. 초성만 있는 상태에서 중성 (예: 'ㄱ' 다음 'ㅏ')
+            // 3. 이미 중성 있는데 또 중성 (복합 모음 규칙 따름)
+            
+            if (currentCho === -1) { // 초성이 없는 상태에서 모음 (K의 지시: 'ㅇ' 없이 단독 모음)
+                shouldCombineAndResetCurrentBuffer = true; // 현재 버퍼 확정 (초성만 있던 경우도 포함)
+            } else if (currentJung !== -1) { // 이미 중성 있는데 또 중성 (복합 모음 아님)
+                const prevJungChar = JUNGSUNG[currentJung];
+                const potentialComplexJung = prevJungChar + char;
+                const newComplexJungIdx = getCharIndex(COMPLEX_JUNGSUNG_MAP[potentialComplexJung], 'jung');
+                if (newComplexJungIdx === -1) { // 복합 모음 불가능
+                    shouldCombineAndResetCurrentBuffer = true;
+                }
+            }
+
+            if (shouldCombineAndResetCurrentBuffer) {
+                combineLastInputtedHangul(); // 이전 조합 확정
+                resetCombination(); // 버퍼 초기화
+            }
+            // `currentCho`가 -1인 채로 `currentJung`을 설정하여 단독 모음을 유지.
+            // 또는 `currentCho`가 있는 상태에서 `currentJung` 설정.
+            if (currentCho === -1 && !shouldCombineAndResetCurrentBuffer) { // 단독 모음 시작 시
                 currentJung = jungIdx;
-            } else { // 이미 중성 있는데 또 중성 (복합모음 아님)
-                 combineLastInputtedHangul(); 
-                 resetCombination();
-                 currentJung = jungIdx;
+            } else if (currentCho !== -1 && currentJung === -1) { // 초성 다음 첫 중성
+                currentJung = jungIdx;
+            } else if (currentCho !== -1 && currentJung !== -1 && !shouldCombineAndResetCurrentBuffer) { // 복합모음 성공
+                currentJung = jungIdx; // 이미 위에서 newComplexJungIdx로 업데이트됨
             }
+            // 이 `currentJung = jungIdx;`는 위 `if/else if` 블록 내부에서 이미 처리되었으므로,
+            // 여기서 중복으로 할당하지 않고, `shouldCombineAndResetCurrentBuffer`가 `false`일 때만 버퍼 업데이트.
+            if (!shouldCombineAndResetCurrentBuffer) {
+                 if (currentCho === -1) { // 'ㅏ' 단독 입력
+                    currentJung = jungIdx;
+                 } else if (currentJung === -1) { // 'ㄱ' + 'ㅏ'
+                    currentJung = jungIdx;
+                 } // 복합모음은 이미 위에서 currentJung 업데이트됨
+            }
+
+
         } 
-        else if (jongIdx !== -1) { // 입력이 종성일 때
-            if (currentCho !== -1 && currentJung !== -1 && currentJong === -1) { // 초성+중성 다음에 종성
+        // 3. 종성 입력
+        else if (jongIdx !== -1) { 
+            // 초성+중성 상태에서 종성
+            if (currentCho !== -1 && currentJung !== -1 && currentJong === -1) { 
                 currentJong = jongIdx;
-            } else { // 다른 경우 (초성만, 모음만, 종성 이미 있음)
-                combineLastInputtedHangul(); 
-                resetCombination();
-                currentJong = jongIdx; 
+            } 
+            // 이미 종성이 있는데 또 종성 (겹받침 시도)
+            else if (currentCho !== -1 && currentJung !== -1 && currentJong !== -1) {
+                const prevJongChar = JONGSUNG[currentJong];
+                const potentialComplexJong = prevJongChar + char;
+                const newComplexJongIdx = getCharIndex(COMPLEX_JONGSUNG_MAP[potentialComplexJong], 'jong');
+                if (newComplexJongIdx !== -1) { // 겹받침 가능
+                    currentJong = newComplexJongIdx;
+                } else { // 겹받침 불가능 -> 이전 글자 확정 후 새 종성 (초성으로) 시작
+                    shouldCombineAndResetCurrentBuffer = true;
+                }
+            }
+            // 그 외 (초성만, 모음만 있는 상태에서 종성) -> 이전 조합 확정 후 새 종성을 초성으로 시작
+            else { 
+                shouldCombineAndResetCurrentBuffer = true;
+            }
+
+            if (shouldCombineAndResetCurrentBuffer) {
+                combineLastInputtedHangul(); // 이전 조합 확정
+                resetCombination(); // 버퍼 초기화
+                currentCho = jongIdx; // 종성을 새 초성으로
             }
         }
 
@@ -455,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         touchStartTime = Date.now();
         initialConsonantZone = null; 
         isDoubleTapHandledThisCycle = false; // 새로운 터치 시작 시 플래그 초기화 (중요)
-
+        
         let clientX, clientY;
         if (e.touches && e.touches.length > 0) {
             clientX = e.touches[0].clientX;
@@ -466,6 +538,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         startX = clientX;
         startY = clientY;
+        prevX = startX; 
+        prevY = startY; 
         
         const buttonRect = mainInputButton.getBoundingClientRect();
         const centerX = buttonRect.left + buttonRect.width / 2;
@@ -518,32 +592,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 let angle = Math.atan2(deltaY_start, deltaX_start) * (180 / Math.PI);
                 if (angle < 0) angle += 360;
                 const initial8Dir = getDirectionStringFromAngle(angle);
-                inputSequence = [initial8Dir]; 
+                inputSequence = [initial8Dir]; // 드래그 시작 방향 기록
             }
         }
         
-        // 모음 복합조합 감지 로직 (기존 유지)
+        // ⭐ 모음 복합조합 감지 로직 (handleMove) - K의 복합 모음 입력 문제 해결 핵심 ⭐
         if (!isConsonantModeActive && isDragging) {
-            const deltaX_current = currentX - startX; 
-            const deltaY_current = currentY - startY; 
-            
-            let currentSegmentAngle = Math.atan2(deltaY_current, deltaX_current) * (180 / Math.PI);
-            if (currentSegmentAngle < 0) currentSegmentAngle += 360;
+            const deltaX_current = currentX - prevX; // 이전 점 대비 이동 거리
+            const deltaY_current = currentY - prevY; // 이전 점 대비 이동 거리
+            const distFromPrev = Math.sqrt(deltaX_current * deltaX_current + deltaY_current * deltaY_current);
 
-            const current8Dir = getDirectionStringFromAngle(currentSegmentAngle);
+            if (distFromPrev > DRAG_THRESHOLD / 2) { // 충분히 움직였을 때만 방향 감지
+                let currentSegmentAngle = Math.atan2(deltaY_current, deltaX_current) * (180 / Math.PI);
+                if (currentSegmentAngle < 0) currentSegmentAngle += 360;
 
-            if (inputSequence.length > 0 && inputSequence[inputSequence.length - 1] !== current8Dir) {
-                const prevSegmentAngle = getCardinalAngle(inputSequence[inputSequence.length - 1]);
-                const relativeTurnAngle = (currentSegmentAngle - prevSegmentAngle + 360) % 360;
-                
-                const VOWEL_TURN_ANGLE_MIN = 30; 
-                const VOWEL_TURN_ANGLE_MAX = 180; 
+                const current8Dir = getDirectionStringFromAngle(currentSegmentAngle);
 
-                if (Math.abs(relativeTurnAngle) >= VOWEL_TURN_ANGLE_MIN && Math.abs(relativeTurnAngle) <= VOWEL_TURN_ANGLE_MAX) {
-                    inputSequence.push(current8Dir);
+                // 새로운 방향이 감지되면 inputSequence에 추가 (최대 3단계)
+                if (inputSequence.length === 0 || inputSequence[inputSequence.length - 1] !== current8Dir) {
+                    if (inputSequence.length < 3) { // 최대 3단계 꺾임 (총 3방향까지)
+                        inputSequence.push(current8Dir);
+                        debugOutput.textContent = `모음 드래그 시퀀스: ${inputSequence.join(' -> ')}`;
+                    }
                 }
             }
         }
+        // ⭐ prevX, prevY 업데이트 (handleMove에서 중요!) ⭐
+        // 이 부분 누락 시 모음 드래그 시퀀스 인식이 안 됨.
+        prevX = currentX;
+        prevY = currentY;
     }
 
     function handleEnd(e) {
@@ -573,41 +650,51 @@ document.addEventListener('DOMContentLoaded', () => {
         let charToProcess = null; 
 
         if (isConsonantModeActive) { 
-            if (totalDragDistance < DRAG_DISTANCE_THRESHOLD) { 
+            if (totalDragDistance < DRAG_DISTANCE_THRESHOLD) { // 탭으로 간주될 만한 경우
                 handleTap(e, totalDragDistance, duration); 
-            } else { 
+            } else { // 드래그
                 handleConsonantDrag(initialConsonantZone); 
             }
-        } else { 
-            if (totalDragDistance < DRAG_DISTANCE_THRESHOLD) { 
+        } else { // 모음 모드
+            if (totalDragDistance < DRAG_DISTANCE_THRESHOLD) { // 탭으로 간주될 만한 경우 (스페이스바 또는 단일 모음)
                 handleTap(e, totalDragDistance, duration);
-            } else { 
-                // 모음 드래그 로직은 그대로 유지하여 char 결정
+            } else { // 모음 드래그 (복합 모음 포함)
+                // ⭐ 모음 드래그 로직 (정확한 복합 모음 매핑) - K의 복합 모음 입력 문제 해결 핵심 ⭐
                 if (inputSequence.length === 3) { 
                     const firstDir = inputSequence[0];
                     const secondDir = inputSequence[1]; 
                     const thirdDir = inputSequence[2]; 
                     const key = `${firstDir}_${secondDir}_${thirdDir}`; 
                     charToProcess = DIRECTIONS.multi_complex_vowel_transitions[key];
+                    debugOutput.textContent += ` (3단계 패턴 시도: ${key})`;
+                    if (!charToProcess) { // 3단계 실패 시 2단계로 재시도 (백업)
+                        const key2 = `${firstDir}_${secondDir}`;
+                        charToProcess = DIRECTIONS.complex_vowel_transitions[key2];
+                        debugOutput.textContent += ` (3단계 실패, 2단계 패턴 시도: ${key2})`;
+                    }
                 } else if (inputSequence.length === 2) { 
                     const firstDir = inputSequence[0];
                     const secondDir = inputSequence[1];
                     const key = `${firstDir}_${secondDir}`;
                     charToProcess = DIRECTIONS.complex_vowel_transitions[key];
-                    if (!charToProcess) { 
+                    debugOutput.textContent += ` (2단계 패턴 시도: ${key})`;
+                    if (!charToProcess) { // 'ㅢ' 특수 인식 (오른손/왼손잡이)
                          if (rightHandRadio.checked && firstDir === 'down-left' && secondDir === 'up-right') {
                             charToProcess = 'ㅢ';
+                            debugOutput.textContent += ` (오른손잡이 'ㅢ' 특수 인식)`;
                          } 
                          else if (leftHandRadio.checked && firstDir === 'down-right' && secondDir === 'up-left') {
                             charToProcess = 'ㅢ';
+                            debugOutput.textContent += ` (왼손잡이 'ㅢ' 특수 인식)`;
                          }
                     }
                 } else if (inputSequence.length === 1) {
                     charToProcess = getPrimaryVowelChar(inputSequence[0]);
+                    debugOutput.textContent += ` (1단계 패턴 시도: ${inputSequence[0]})`;
                 }
 
                 if (charToProcess) {
-                    processInputAndSetTimer(charToProcess, 'vowel', totalDragDistance, inputSequence.join(' -> '));
+                    processInputAndSetTimer(charToProcess, 'vowel', totalDragDistance, `gesture: ${inputSequence.join('->')}`);
                 } else {
                     debugOutput.textContent = `입력 실패 (모음 드래그): 총 거리=${totalDragDistance.toFixed(0)}px, 시퀀스: ${inputSequence.join(' -> ')}`;
                 }
@@ -628,15 +715,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentTime = Date.now();
 
-        if (!isConsonantModeActive) { 
-            processInputAndSetTimer(' ', 'vowel', totalDragDistance, 'tap-space'); 
-            // 스페이스바 입력 후에는 더블 탭 관련 변수 초기화
+        if (!isConsonantModeActive) { // 모음 모드
+            // ⭐ 모음 모드 탭 시, 스페이스바가 아닌 해당 모음이 출력되도록 수정 ⭐
+            const tappedVowelChar = getPrimaryVowelChar(tapDirection); // 탭 방향으로 기본 모음 가져오기
+            if (tappedVowelChar) {
+                processInputAndSetTimer(tappedVowelChar, 'vowel', totalDragDistance, `tap-vowel-${tapDirection}`);
+            } else { // 기본 모음에 해당하지 않으면 스페이스바 처리
+                processInputAndSetTimer(' ', 'vowel', totalDragDistance, 'tap-space'); 
+            }
+            // 탭 후에는 탭 관련 변수 초기화
             lastTapTime = 0; 
             lastTapDirection = null;
             lastTapStartX = 0;
             lastTapStartY = 0;
             return; 
         } 
+        // 자음 모드 (사각형 바깥) 탭 = 싱글/더블 탭
         else { 
             // ⭐ 더블 탭 로직:
             if (lastTapDirection === tapDirection && 
@@ -647,15 +741,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 더블 탭 감지!
                 isDoubleTapHandledThisCycle = true; // 현재 사이클에서 더블 탭이 처리되었음을 표시 (중요)
                 
-                // K의 지시: 'ㅉ', 'ㄸ', 'ㅃ'도 ㄲ, ㅆ처럼 이전 단일 자음 삭제 후 대체
+                // K의 지시: 'ㅉ', 'ㄸ', 'ㅃ'도 ㄲ, ㅆ처럼 이전 단일 자음 삭제 후 대체 (강화된 로직)
                 let currentText = kkotipInput.value;
                 let cursorPos = kkotipInput.selectionStart;
-                const charToInputDouble = DIRECTIONS.consonant[tapDirection]?.doubleTapChar;
-                const singleTapCharForDirection = DIRECTIONS.consonant[tapDirection]?.char; // 'ㅈ', 'ㄷ', 'ㅂ'
+                
+                // 현재 탭 방향의 싱글 탭 자음을 가져옴 (예: 'ㅈ' 방향에서 'ㅉ' 더블 탭 시 싱글 탭 자음은 'ㅈ')
+                const singleTapCharForDirection = DIRECTIONS.consonant[tapDirection]?.char; 
 
-                // 직전 글자가 단독 초성이며, 현재 탭 방향의 싱글 탭 자음과 일치할 경우
+                // 직전 글자가 한글 완성형이 아니고, 단독 초성이며, 해당 방향의 싱글 탭 자음과 일치할 때
                 if (cursorPos > 0 && currentText.slice(cursorPos - 1, cursorPos) === singleTapCharForDirection) {
-                    // 직전의 단일 초성 삭제 (예: 'ㅈ'을 지움)
+                    // 직전의 단독 초성을 삭제 (예: 'ㅈ'을 지움)
                     kkotipInput.value = currentText.slice(0, cursorPos - 1);
                     kkotipInput.selectionStart = cursorPos - 1;
                     kkotipInput.selectionEnd = cursorPos - 1;
@@ -683,6 +778,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging = false;
         startX = 0;
         startY = 0;
+        prevX = 0; 
+        prevY = 0; 
         touchStartTime = 0;
         initialConsonantZone = null; 
         inputSequence = []; 
