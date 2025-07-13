@@ -60,11 +60,21 @@ document.addEventListener('DOMContentLoaded', () => {
             'down': { angle: [67.5, 112.5], char: 'ㅂ', doubleTapChar: 'ㅃ', dragChar: 'ㅍ' },
             'down-right': { angle: [22.5, 67.5], char: 'ㅁ', doubleTapChar: '?', dragChar: '.' } 
         },
+		//'vowel': { 
+        //    'right': { angle: [337.5, 22.5], char: 'ㅏ', doubleTapChar: 'ㅑ', dragChar: 'ㅐ' }, 
+        //    'up-right': { angle: [292.5, 337.5], char: 'ㅣ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' },
+        //    'up': { angle: [247.5, 292.5], char: 'ㅗ', doubleTapChar: 'ㅛ', dragChar: 'ㅚ' },
+        //    'up-left': { angle: [202.5, 247.5], char: 'ㅣ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' }, 
+        //    'left': { angle: [157.5, 202.5], char: 'ㅓ', doubleTapChar: 'ㅕ', dragChar: 'ㅔ' },
+        //    'down-left': { angle: [112.5, 157.5], char: 'ㅡ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' }, 
+        //    'down': { angle: [67.5, 112.5], char: 'ㅜ', doubleTapChar: 'ㅠ', dragChar: 'ㅟ' },
+        //    'down-right': { angle: [22.5, 67.5], char: 'ㅡ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' } 
+        //},
         'vowel': { 
-            'right': { angle: [337.5, 22.5], char: 'ㅏ' },
-            'left': { angle: [157.5, 202.5], char: 'ㅓ' },
-            'up': { angle: [247.5, 292.5], char: 'ㅗ' },
-            'down': { angle: [67.5, 112.5], char: 'ㅜ' },
+            'right': { angle: [337.5, 22.5], char: 'ㅏ'},
+            'left': { angle: [157.5, 202.5], char: 'ㅓ'},
+            'up': { angle: [247.5, 292.5], char: 'ㅗ'},
+            'down': { angle: [67.5, 112.5], char: 'ㅜ'},
         },
         'complex_vowel_transitions': { 
             'right_left': 'ㅑ',     
@@ -172,28 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const code = 0xAC00 + (cho * 21 * 28) + (jung * 28) + jong;
         return String.fromCharCode(code);
     }
-
-	//function handleConsonantTap(direction) {
-	//	const singleChar = DIRECTIONS.consonant[direction]?.char;
-	//	if (!singleChar) return;
-
-	//	if (tapTimer === null) {
-	//		tapTimer = setTimeout(() => {
-	//			// 👉 싱글탭이 더블탭에 의해 무효화됐는지 한 번 더 확인
-	//			if (isDoubleTapHandledThisCycle) {
-	//				tapTimer = null; // 이미 더블탭 처리된 경우, 싱글 입력 무시
-	//				return;
-	//			}
-	//			appendCharToInput(singleChar);
-	//			debugOutput.textContent = `싱글탭 입력: ${singleChar}`;
-	//			tapTimer = null;
-	//		}, 250);
-	//	} else {
-	//		clearTimeout(tapTimer);
-	//		tapTimer = null;
-	//		// 더블탭은 handleTap에서 처리됨
-	//	}
-	//}
 	
 	function handleConsonantTap(direction) {
 		const singleChar = DIRECTIONS.consonant[direction]?.char;
@@ -259,23 +247,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 입력된 문자를 그대로 텍스트 에어리어에 추가하는 핵심 함수
-    function appendCharToInput(char) {
-        let currentText = kkotipInput.value;
-        let cursorPos = kkotipInput.selectionStart;
+	function appendCharToInput(char, skipBuffer = false) {
+		let currentText = kkotipInput.value;
+		let cursorPos = kkotipInput.selectionStart;
 
-        if (cursorPos < currentText.length) { // 커서가 중간에 있으면 해당 위치에 삽입
-            kkotipInput.value = currentText.substring(0, cursorPos) + char + currentText.substring(cursorPos);
-            kkotipInput.selectionStart = cursorPos + char.length;
-            kkotipInput.selectionEnd = cursorPos + char.length;
-        } else { // 커서가 맨 뒤에 있으면 그냥 추가
-            //rawBuffer += char;		
-			//kkotipInput.value = combineSmartHangul(rawBuffer);   
-            appendCharToBuffer(char);
+		if (cursorPos < currentText.length) {
+			kkotipInput.value = currentText.substring(0, cursorPos) + char + currentText.substring(cursorPos);
+			kkotipInput.selectionStart = cursorPos + char.length;
+			kkotipInput.selectionEnd = cursorPos + char.length;
+		} else {
+			if (!skipBuffer) {
+				appendCharToBuffer(char);
+			} else {
+				kkotipInput.value += char;
+			}
 			kkotipInput.selectionStart = kkotipInput.value.length;
-            kkotipInput.selectionEnd = kkotipInput.value.length;
-        }
-        kkotipInput.focus(); // 입력 후 포커스 유지
-    }
+			kkotipInput.selectionEnd = kkotipInput.value.length;
+		}
+		kkotipInput.focus();
+	}
 
     // --- 세 가지 자음 입력 함수 ---
     function handleConsonantSingleTap(direction) {
@@ -543,14 +533,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 더블 탭 감지!
                 isDoubleTapHandledThisCycle = true; 
                 
+				if (tapTimer !== null) {
+					clearTimeout(tapTimer);  // ✅ 이 한 줄 추가
+					tapTimer = null;
+				}
+				
 				const currentText = kkotipInput.value;
 				const cursorPos = kkotipInput.selectionStart;
 				const singleChar = DIRECTIONS.consonant[tapDirection]?.char;
 				const doubleChar = DIRECTIONS.consonant[tapDirection]?.doubleTapChar;
-				
-            //    let currentText = kkotipInput.value;
-            //    let cursorPos = kkotipInput.selectionStart;
-            //    const singleTapCharForDirection = DIRECTIONS.consonant[tapDirection]?.char; 
 
                 // 직전 글자가 싱글 자음이면 삭제 
                 if (cursorPos > 0 && currentText.slice(cursorPos - 1, cursorPos) === singleChar) {
@@ -560,9 +551,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				}	
 				if (rawBuffer.endsWith(singleChar)) {
 					rawBuffer = rawBuffer.slice(0, -1);
-                }
+				}
                 
-				appendCharToInput(doubleChar);  // ✅ 정확히 여기서만 입력
+				rawBuffer += doubleChar;
+				kkotipInput.value = combineSmartHangul(rawBuffer);
+				kkotipInput.selectionStart = kkotipInput.value.length;
+				kkotipInput.selectionEnd = kkotipInput.value.length;
+			//	appendCharToInput(doubleChar, true);  // ✅ 정확히 여기서만 입력
 				debugOutput.textContent = `더블탭 입력: ${doubleChar}`;
 				
                 lastTapTime = 0; 
