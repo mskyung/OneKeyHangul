@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputButtonContainer = document.getElementById('inputButtons');
     const mainInputButton = document.getElementById('mainInputButton');
     const refreshButton = document.getElementById('refreshButton');
-    const debugOutput = document.getElementById('debugOutput');
     const rightHandRadio = document.getElementById('rightHand');
     const leftHandRadio = document.getElementById('leftHand');
 	const deleteButton = document.getElementById('deleteButton'); 
@@ -15,11 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rightHandRadio.checked) {
             inputButtonContainer.classList.remove('left-hand');
             inputButtonContainer.classList.add('right-hand');
-            debugOutput.textContent = '버튼 위치: 오른손잡이';
         } else if (leftHandRadio.checked) {
             inputButtonContainer.classList.remove('right-hand');
             inputButtonContainer.classList.add('left-hand');
-            debugOutput.textContent = '버튼 위치: 왼손잡이';
         }
     }
 
@@ -60,16 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'down': { angle: [67.5, 112.5], char: 'ㅂ', doubleTapChar: 'ㅃ', dragChar: 'ㅍ' },
             'down-right': { angle: [22.5, 67.5], char: 'ㅁ', doubleTapChar: '?', dragChar: '.' } 
         },
-		//'vowel': { 
-        //    'right': { angle: [337.5, 22.5], char: 'ㅏ', doubleTapChar: 'ㅑ', dragChar: 'ㅐ' }, 
-        //    'up-right': { angle: [292.5, 337.5], char: 'ㅣ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' },
-        //    'up': { angle: [247.5, 292.5], char: 'ㅗ', doubleTapChar: 'ㅛ', dragChar: 'ㅚ' },
-        //    'up-left': { angle: [202.5, 247.5], char: 'ㅣ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' }, 
-        //    'left': { angle: [157.5, 202.5], char: 'ㅓ', doubleTapChar: 'ㅕ', dragChar: 'ㅔ' },
-        //    'down-left': { angle: [112.5, 157.5], char: 'ㅡ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' }, 
-        //    'down': { angle: [67.5, 112.5], char: 'ㅜ', doubleTapChar: 'ㅠ', dragChar: 'ㅟ' },
-        //    'down-right': { angle: [22.5, 67.5], char: 'ㅡ', doubleTapChar: 'ㅢ', dragChar: 'ㅢ' } 
-        //},
         'vowel': { 
             'right': { angle: [337.5, 22.5], char: 'ㅏ'},
             'left': { angle: [157.5, 202.5], char: 'ㅓ'},
@@ -77,54 +64,29 @@ document.addEventListener('DOMContentLoaded', () => {
             'down': { angle: [67.5, 112.5], char: 'ㅜ'},
         },
         'complex_vowel_transitions': { 
-            'right_left': 'ㅑ',     
-            'left_right': 'ㅕ',     
-            'up_down': 'ㅛ',        
-            'down_up': 'ㅠ',        
-            
-            'left_up': 'ㅔ',        
-            'left_up-right': 'ㅔ',      
-
-            'right_up': 'ㅐ',       
-            'right_up-left': 'ㅐ',      
-
             'left_down': 'ㅖ',      
             'left_down-right': 'ㅖ',    
 
             'right_down': 'ㅒ',     
             'right_down-left': 'ㅒ',    
-            
-            'up_left': 'ㅚ',        
-            'up_down-left': 'ㅚ',       
 
             'up_right': 'ㅘ',       
-            'up_down-right': 'ㅘ',      
+            'up_down-right': 'ㅘ',    
 
-            'down_right': 'ㅟ',     
-            'down_up-right': 'ㅟ',      
+            'up_left': 'ㅙ',       
+            'up_down-left': 'ㅙ', 			
+
+            'down_right': 'ㅞ',     
+            'down_up-right': 'ㅞ',      
 
             'down_left': 'ㅝ',      
             'down_up-left': 'ㅝ',       
-            
-            'down-left_up-right': 'ㅢ', 
-            'down-right_up-left': 'ㅢ'  
         },
-        'multi_complex_vowel_transitions': { 
-            'up_right_down': 'ㅙ', 
-            'up_down-right_down': 'ㅙ', 
-
-            'down_left_up': 'ㅞ',  
-            'down_up-left_up': 'ㅞ'  
-        }
     };
 	
     const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     const JUNG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
     const JONG = ['', 'ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-	
-    const DOUBLE_CONSONANTS = {
-        'ㄱ': 'ㄲ', 'ㄷ': 'ㄸ', 'ㅂ': 'ㅃ', 'ㅅ': 'ㅆ', 'ㅈ': 'ㅉ'
-    };
 	
     function isCho(char) { return CHO.includes(char); }
     function isJung(char) { return JUNG.includes(char); }
@@ -197,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					return;
 				}
 				appendCharToInput(singleChar);
-				debugOutput.textContent = `싱글탭 입력: ${singleChar}`;
 				tapTimer = null;
 			}, 250);
 
@@ -211,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			// 더블탭은 handleTap에서만 처리
 		}
 	}
-	
 	
     deleteButton.addEventListener('click', () => {
         deleteLastCharFromBuffer();
@@ -267,49 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		kkotipInput.focus();
 	}
 
-    // --- 세 가지 자음 입력 함수 ---
-    function handleConsonantSingleTap(direction) {
-        const charToInput = DIRECTIONS.consonant[direction]?.char;
-        if (charToInput) {
-            // 조합 로직 없이 직접 출력
-            appendCharToInput(charToInput); 
-            debugOutput.textContent = `싱글 탭 입력: ${charToInput}`;
-        } else {
-            debugOutput.textContent = `싱글 탭 오류: ${direction} 방향에 해당하는 자음을 찾을 수 없음`;
-        }
-    }
-
-    function handleConsonantDoubleTap(direction) {
-        const charToInput = DIRECTIONS.consonant[direction]?.doubleTapChar;
-        if (charToInput) {
-            // 조합 로직 없이 직접 출력
-            appendCharToInput(charToInput); 
-            debugOutput.textContent = `더블 탭 입력: ${charToInput}`;
-        } else {
-            debugOutput.textContent = `더블 탭 오류: ${direction} 방향에 해당하는 자음을 찾을 수 없음`;
-        }
-    }
-
     function handleConsonantDrag(direction) {
         const charToInput = DIRECTIONS.consonant[direction]?.dragChar;
         if (charToInput) {
             // 조합 로직 없이 직접 출력
             appendCharToInput(charToInput); 
-            debugOutput.textContent = `드래그 입력: ${charToInput}`;
-        } else {
-            debugOutput.textContent = `드래그 오류: ${direction} 방향에 해당하는 자음을 찾을 수 없음`;
+		} else {
         }
-    }
-
-    // --- 실제 입력 처리를 담당하는 함수 (모든 조합 로직 제거, appendCharToInput 직접 호출) ---
-    function processInputAndSetTimer(char, finalInputType, totalDragDistance, inputSequenceDebug) {
-        // 커서가 중간에 있으면, 조합 로직 무시하고 단순히 삽입
-        let currentText = kkotipInput.value;
-        let cursorPos = kkotipInput.selectionStart;
-
-        // 항상 입력된 char를 그대로 append
-        appendCharToInput(char);
-        debugOutput.textContent = `입력 완료 (${finalInputType}): ${char} (총 거리: ${totalDragDistance.toFixed(0)}px, 시퀀스: ${inputSequenceDebug})`;
     }
 
     // --- 이벤트 핸들러 ---
@@ -353,9 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let initialAngleForZone = Math.atan2(relativeY, relativeX) * (180 / Math.PI);
             if (initialAngleForZone < 0) initialAngleForZone += 360;
             initialConsonantZone = getDirectionStringFromAngle(initialAngleForZone); 
-            debugOutput.textContent = `제스처 시작 (모드: 자음, 구역: ${initialConsonantZone})`;
         } else {
-            debugOutput.textContent = `제스처 시작 (모드: 모음, 중앙 원형)`;
         }
     }
 
@@ -404,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (inputSequence.length === 0 || inputSequence[inputSequence.length - 1] !== current8Dir) {
                     if (inputSequence.length < 3) { 
                         inputSequence.push(current8Dir);
-                        debugOutput.textContent = `모음 드래그 시퀀스: ${inputSequence.join(' -> ')}`;
                     }
                 }
             }
@@ -418,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 더블 탭이 이미 처리되었으면, 이 handleEnd는 무시
         if (isDoubleTapHandledThisCycle) {
-            debugOutput.textContent += ` (더블 탭 처리 완료, handleEnd 무시됨)`;
             resetGestureState(); 
             return;
         }
@@ -456,39 +376,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     const thirdDir = inputSequence[2]; 
                     const key = `${firstDir}_${secondDir}_${thirdDir}`; 
                     charToProcess = DIRECTIONS.multi_complex_vowel_transitions[key];
-                    debugOutput.textContent += ` (3단계 패턴 시도: ${key})`;
                     if (!charToProcess) { 
                         const key2 = `${firstDir}_${secondDir}`;
                         charToProcess = DIRECTIONS.complex_vowel_transitions[key2];
-                        debugOutput.textContent += ` (3단계 실패, 2단계 패턴 시도: ${key2})`;
                     }
                 } else if (inputSequence.length === 2) { 
                     const firstDir = inputSequence[0];
                     const secondDir = inputSequence[1];
                     const key = `${firstDir}_${secondDir}`;
                     charToProcess = DIRECTIONS.complex_vowel_transitions[key];
-                    debugOutput.textContent += ` (2단계 패턴 시도: ${key})`;
                     if (!charToProcess) { 
                          if (rightHandRadio.checked && firstDir === 'down-left' && secondDir === 'up-right') {
                             charToProcess = 'ㅢ';
-                            debugOutput.textContent += ` (오른손잡이 'ㅢ' 특수 인식)`;
                          } 
                          else if (leftHandRadio.checked && firstDir === 'down-right' && secondDir === 'up-left') {
                             charToProcess = 'ㅢ';
-                            debugOutput.textContent += ` (왼손잡이 'ㅢ' 특수 인식)`;
-                         }
+                          }
                     }
                 } else if (inputSequence.length === 1) {
-                    charToProcess = getPrimaryVowelChar(inputSequence[0]);
-                    debugOutput.textContent += ` (1단계 패턴 시도: ${inputSequence[0]})`;
+                    const dir = inputSequence[0];
+					const baseChar = getPrimaryVowelChar(dir);
+
+					const vowelDragMap = {
+						'ㅏ': 'ㅐ',
+						'ㅓ': 'ㅔ',
+						'ㅗ': 'ㅚ',
+						'ㅜ': 'ㅟ'
+					};
+					
+					charToProcess = vowelDragMap[baseChar] || baseChar;
                 }
 
                 if (charToProcess) {
                     // 조합 로직 없이 직접 출력하도록 변경
                     appendCharToInput(charToProcess); 
-                    debugOutput.textContent = `모음 드래그 입력: ${charToProcess}`;
                 } else {
-                    debugOutput.textContent = `입력 실패 (모음 드래그): 총 거리=${totalDragDistance.toFixed(0)}px, 시퀀스: ${inputSequence.join(' -> ')}`;
                 }
             }
         }
@@ -507,21 +429,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentTime = Date.now();
 
-        if (!isConsonantModeActive) { // 모음 모드 (탭)
-            const tappedVowelChar = getPrimaryVowelChar(tapDirection); 
-            if (tappedVowelChar) {
-                appendCharToInput(tappedVowelChar); // 직접 출력
-                debugOutput.textContent = `모음 탭 입력: ${tappedVowelChar}`;
-            } else { 
-                appendCharToInput(' '); // 직접 출력 (스페이스)
-                debugOutput.textContent = `스페이스 입력`;
-            }
-            lastTapTime = 0; 
-            lastTapDirection = null;
-            lastTapStartX = 0;
-            lastTapStartY = 0;
-            return; 
-        } 
+		if (!isConsonantModeActive) { // 모음 모드 (탭)
+			const tappedVowelChar = getPrimaryVowelChar(tapDirection); 
+			const currentTime = Date.now();
+
+			if (
+				lastTapDirection === tapDirection &&
+				(currentTime - lastTapTime < TAP_DURATION_THRESHOLD) &&
+				(Math.abs(startX - lastTapStartX) < DOUBLE_TAP_DISTANCE_THRESHOLD * 2) &&
+				(Math.abs(startY - lastTapStartY) < DOUBLE_TAP_DISTANCE_THRESHOLD * 2)
+			) {
+				// 더블탭 감지!
+				isDoubleTapHandledThisCycle = true;
+				
+				if (tapTimer !== null) {
+					clearTimeout(tapTimer);
+					tapTimer = null;
+				}
+
+				// 'right' 방향만 우선 구현 (ㅏ → ㅑ)
+				let doubleVowelChar = null;
+				if (tapDirection === 'right') doubleVowelChar = 'ㅑ';
+				else if (tapDirection === 'left') doubleVowelChar = 'ㅕ';
+				else if (tapDirection === 'up') doubleVowelChar = 'ㅛ';
+				else if (tapDirection === 'down') doubleVowelChar = 'ㅠ';
+				// 'ㅢ' 처리: 손잡이에 따라 다름
+				else if (
+					(rightHandRadio.checked && (tapDirection === 'down-left' || tapDirection === 'up-right')) ||
+					(leftHandRadio.checked && (tapDirection === 'down-right' || tapDirection === 'up-left'))
+				) {
+					doubleVowelChar = 'ㅢ';
+				}
+
+				if (doubleVowelChar) {
+					rawBuffer += doubleVowelChar;
+					kkotipInput.value = combineSmartHangul(rawBuffer);
+					kkotipInput.selectionStart = kkotipInput.value.length;
+					kkotipInput.selectionEnd = kkotipInput.value.length;
+				} 
+
+				lastTapTime = 0;
+				lastTapDirection = null;
+				lastTapStartX = 0;
+				lastTapStartY = 0;
+				return;
+			}
+
+			// 싱글탭 예약 (딜레이를 주자!)
+			if (tapTimer === null) {
+				let handled = false;
+
+				tapTimer = setTimeout(() => {
+					if (isDoubleTapHandledThisCycle || handled) {
+						tapTimer = null;
+						return;
+					}
+
+					if (tappedVowelChar) {
+						appendCharToInput(tappedVowelChar);
+					} else {
+						appendCharToInput(' ');
+					}
+
+					tapTimer = null;
+				}, 250);
+
+				setTimeout(() => {
+					handled = isDoubleTapHandledThisCycle;
+				}, 0);
+			}
+
+			lastTapTime = currentTime;
+			lastTapDirection = tapDirection;
+			lastTapStartX = startX;
+			lastTapStartY = startY;
+			return;
+		}
+		
         // 자음 모드(사각형 바깥) 탭 = 싱글/더블 탭
         else { 
             // 더블 탭 로직:
@@ -534,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isDoubleTapHandledThisCycle = true; 
                 
 				if (tapTimer !== null) {
-					clearTimeout(tapTimer);  // ✅ 이 한 줄 추가
+					clearTimeout(tapTimer);  
 					tapTimer = null;
 				}
 				
@@ -557,8 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				kkotipInput.value = combineSmartHangul(rawBuffer);
 				kkotipInput.selectionStart = kkotipInput.value.length;
 				kkotipInput.selectionEnd = kkotipInput.value.length;
-			//	appendCharToInput(doubleChar, true);  // ✅ 정확히 여기서만 입력
-				debugOutput.textContent = `더블탭 입력: ${doubleChar}`;
 				
                 lastTapTime = 0; 
                 lastTapDirection = null;
@@ -574,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
         }
     }
-    
 	
     function resetGestureState() {
         isGestureActive = false;
